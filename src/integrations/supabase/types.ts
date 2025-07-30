@@ -14,7 +14,125 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      detection_jobs: {
+        Row: {
+          analysis_end_time: string | null
+          analysis_start_time: string | null
+          created_at: string
+          file_path: string
+          id: string
+          original_filename: string
+          status: string
+          updated_at: string
+          upload_timestamp: string
+          user_id: string
+        }
+        Insert: {
+          analysis_end_time?: string | null
+          analysis_start_time?: string | null
+          created_at?: string
+          file_path: string
+          id?: string
+          original_filename: string
+          status?: string
+          updated_at?: string
+          upload_timestamp?: string
+          user_id: string
+        }
+        Update: {
+          analysis_end_time?: string | null
+          analysis_start_time?: string | null
+          created_at?: string
+          file_path?: string
+          id?: string
+          original_filename?: string
+          status?: string
+          updated_at?: string
+          upload_timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      detection_results: {
+        Row: {
+          analysis_duration_seconds: number
+          anomaly_timestamps: Json | null
+          audio_analysis: Json | null
+          audio_confidence: number
+          confidence_score: number
+          created_at: string
+          id: string
+          job_id: string
+          prediction: string
+          visual_analysis: Json | null
+          visual_confidence: number
+        }
+        Insert: {
+          analysis_duration_seconds: number
+          anomaly_timestamps?: Json | null
+          audio_analysis?: Json | null
+          audio_confidence: number
+          confidence_score: number
+          created_at?: string
+          id?: string
+          job_id: string
+          prediction: string
+          visual_analysis?: Json | null
+          visual_confidence: number
+        }
+        Update: {
+          analysis_duration_seconds?: number
+          anomaly_timestamps?: Json | null
+          audio_analysis?: Json | null
+          audio_confidence?: number
+          confidence_score?: number
+          created_at?: string
+          id?: string
+          job_id?: string
+          prediction?: string
+          visual_analysis?: Json | null
+          visual_confidence?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detection_results_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "detection_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
