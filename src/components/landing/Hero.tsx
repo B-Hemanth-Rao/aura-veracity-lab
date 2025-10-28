@@ -86,13 +86,12 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.6 }}
         >
-          <Button variant="hero" size="lg" className="text-lg px-8 py-6" onClick={() => window.location.href = '/auth'}>
+          <Button variant="hero" size="lg" className="text-lg px-8 py-6" onClick={() => window.location.href = '/auth?mode=signup'}>
             <Brain className="w-5 h-5 mr-2" />
-            Start Detection
+            Sign Up
           </Button>
-          <Button variant="glass" size="lg" className="text-lg px-8 py-6">
-            <Zap className="w-5 h-5 mr-2" />
-            Learn More
+          <Button variant="glass" size="lg" className="text-lg px-8 py-6" onClick={() => window.location.href = '/auth?mode=signin'}>
+            Login
           </Button>
         </motion.div>
 

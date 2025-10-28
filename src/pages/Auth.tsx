@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,17 @@ import { Eye, EyeOff, Shield, Zap, Brain } from 'lucide-react';
 
 const Auth = () => {
   const { user, signIn, signUp, loading } = useAuth();
+  const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('signin');
+
+  useEffect(() => {
+    const mode = searchParams.get('mode');
+    if (mode === 'signup' || mode === 'signin') {
+      setActiveTab(mode);
+    }
+  }, [searchParams]);
 
   // Redirect if already authenticated
   if (user) {
@@ -112,7 +121,7 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="signin" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
