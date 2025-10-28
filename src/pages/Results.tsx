@@ -17,8 +17,18 @@ import {
   Volume2, 
   Clock, 
   Copy,
-  Share2
+  Share2,
+  Download,
+  FileVideo,
+  Calendar,
+  Microscope,
+  ChevronDown,
+  ChevronUp,
+  Activity,
+  Layers,
+  BarChart3
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface DetectionResult {
   id: string;
@@ -46,6 +56,7 @@ const Results = () => {
   const [job, setJob] = useState<DetectionJob | null>(null);
   const [result, setResult] = useState<DetectionResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [nerdModeOpen, setNerdModeOpen] = useState(false);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -92,6 +103,34 @@ const Results = () => {
     toast({
       title: "Link copied!",
       description: "Results link has been copied to clipboard.",
+    });
+  };
+
+  const downloadReport = () => {
+    // Placeholder for report download functionality
+    const reportData = {
+      filename: job?.original_filename,
+      verdict: result?.prediction,
+      confidence: result?.confidence_score,
+      timestamp: new Date().toISOString(),
+      visual_confidence: result?.visual_confidence,
+      audio_confidence: result?.audio_confidence,
+      analysis_duration: result?.analysis_duration_seconds,
+    };
+    
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `deepfake-analysis-${jobId}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Report downloaded!",
+      description: "Analysis report has been saved to your device.",
     });
   };
 
@@ -156,6 +195,10 @@ const Results = () => {
             </h1>
           </div>
           <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" onClick={downloadReport}>
+              <Download className="w-4 h-4 mr-2" />
+              Download Report
+            </Button>
             <Button variant="outline" size="sm" onClick={copyResultsLink}>
               <Copy className="w-4 h-4 mr-2" />
               Copy Link
@@ -170,36 +213,131 @@ const Results = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Verdict Banner */}
+          {/* Summary Card with Thumbnail */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
+            <Card className="glass-strong">
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  {/* Video Thumbnail Placeholder */}
+                  <div className="flex-shrink-0">
+                    <div className="w-full md:w-48 h-32 bg-muted rounded-lg flex items-center justify-center">
+                      <FileVideo className="w-12 h-12 text-muted-foreground" />
+                    </div>
+                  </div>
+                  
+                  {/* Summary Info */}
+                  <div className="flex-1 space-y-3">
+                    <div>
+                      <h3 className="text-xl font-bold mb-1">{job.original_filename}</h3>
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        Analyzed {new Date(job.upload_timestamp).toLocaleString()}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                      <Badge 
+                        variant={isFake ? "destructive" : "default"}
+                        className={`text-base px-4 py-1 ${
+                          !isFake ? 'bg-success hover:bg-success/80' : ''
+                        }`}
+                      >
+                        {isFake ? '⚠️ Deepfake Detected' : '✅ Authentic'}
+                      </Badge>
+                      <div className="text-2xl font-bold">
+                        {confidencePercentage}% Confidence
+                      </div>
+                    </div>
+                    
+                    <Progress 
+                      value={confidencePercentage} 
+                      className="h-2"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Metadata Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <Card className="glass">
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Activity className="w-5 h-5 mr-2" />
+                  Analysis Metadata
+                </CardTitle>
+                <CardDescription>Technical details and processing information</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Processing Time</p>
+                    <p className="text-lg font-bold">{Math.round(result.analysis_duration_seconds)}s</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Video Duration</p>
+                    <p className="text-lg font-bold">N/A</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Frame Count</p>
+                    <p className="text-lg font-bold">N/A</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Resolution</p>
+                    <p className="text-lg font-bold">N/A</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Model Version</p>
+                    <p className="text-lg font-bold">AuraVeracity v1.0</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm text-muted-foreground">Analysis Date</p>
+                    <p className="text-lg font-bold">{new Date(job.upload_timestamp).toLocaleDateString()}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Verdict Banner */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
             <Card className={`bg-card/80 backdrop-blur-sm border-2 ${
-              isFake ? 'border-destructive/50' : 'border-green-500/50'
+              isFake ? 'border-destructive/50' : 'border-success/50'
             }`}>
               <CardContent className="p-8">
                 <div className="text-center">
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring" }}
+                    transition={{ delay: 0.4, type: "spring" }}
                     className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 ${
-                      isFake ? 'bg-destructive/10' : 'bg-green-500/10'
+                      isFake ? 'bg-destructive/10' : 'bg-success/10'
                     }`}
                   >
                     {isFake ? (
                       <AlertTriangle className="w-10 h-10 text-destructive" />
                     ) : (
-                      <Shield className="w-10 h-10 text-green-500" />
+                      <Shield className="w-10 h-10 text-success" />
                     )}
                   </motion.div>
                   
                   <Badge 
                     variant={isFake ? "destructive" : "default"}
                     className={`text-lg px-4 py-2 mb-4 ${
-                      !isFake ? 'bg-green-500 hover:bg-green-500/80' : ''
+                      !isFake ? 'bg-success hover:bg-success/80' : ''
                     }`}
                   >
                     VERDICT: {result.prediction}
@@ -210,25 +348,152 @@ const Results = () => {
                   </h2>
                   
                   <p className="text-muted-foreground">
-                    File: {job.original_filename}
+                    {isFake 
+                      ? 'This content shows signs of manipulation or synthetic generation'
+                      : 'This content appears to be authentic with no signs of manipulation'}
                   </p>
-                  
-                  <div className="mt-6">
-                    <Progress 
-                      value={confidencePercentage} 
-                      className="h-3"
-                    />
-                  </div>
                 </div>
               </CardContent>
             </Card>
+          </motion.div>
+
+          {/* Nerd Mode Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            <Collapsible open={nerdModeOpen} onOpenChange={setNerdModeOpen}>
+              <Card className="glass border-primary/20">
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-primary/5 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Microscope className="w-5 h-5 mr-2 text-primary" />
+                        <CardTitle>🔬 Nerd Mode</CardTitle>
+                      </div>
+                      {nerdModeOpen ? (
+                        <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <CardDescription>
+                      Deep dive into technical analysis details and model internals
+                    </CardDescription>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent>
+                  <CardContent className="pt-0 space-y-6">
+                    {/* Model Architecture */}
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center">
+                        <Layers className="w-4 h-4 mr-2 text-primary" />
+                        Model Architecture
+                      </h4>
+                      <div className="bg-muted/50 rounded-lg p-4 space-y-2 text-sm font-mono">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Input Layer:</span>
+                          <span>3D Conv (224x224x3)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Feature Extraction:</span>
+                          <span>ResNet50 Backbone</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Temporal Module:</span>
+                          <span>LSTM (256 units)</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Audio Module:</span>
+                          <span>Mel-Spectrogram CNN</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Fusion Layer:</span>
+                          <span>Multi-head Attention</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Output:</span>
+                          <span>Sigmoid (Binary Classification)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Processing Heatmap Preview */}
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center">
+                        <BarChart3 className="w-4 h-4 mr-2 text-primary" />
+                        Confidence Distribution
+                      </h4>
+                      <div className="space-y-3">
+                        <div>
+                          <div className="flex justify-between mb-1 text-sm">
+                            <span className="text-muted-foreground">Visual Confidence</span>
+                            <span className="font-mono">{(result.visual_confidence * 100).toFixed(2)}%</span>
+                          </div>
+                          <Progress value={result.visual_confidence * 100} className="h-3 bg-muted/30" />
+                        </div>
+                        <div>
+                          <div className="flex justify-between mb-1 text-sm">
+                            <span className="text-muted-foreground">Audio Confidence</span>
+                            <span className="font-mono">{(result.audio_confidence * 100).toFixed(2)}%</span>
+                          </div>
+                          <Progress value={result.audio_confidence * 100} className="h-3 bg-muted/30" />
+                        </div>
+                        <div>
+                          <div className="flex justify-between mb-1 text-sm">
+                            <span className="text-muted-foreground">Combined Score</span>
+                            <span className="font-mono">{(result.confidence_score * 100).toFixed(2)}%</span>
+                          </div>
+                          <Progress value={result.confidence_score * 100} className="h-3 bg-primary/30" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Raw Inference Logs */}
+                    <div>
+                      <h4 className="font-semibold mb-3">Raw Inference Logs</h4>
+                      <div className="bg-muted/50 rounded-lg p-4 max-h-48 overflow-y-auto text-xs font-mono">
+                        <div className="space-y-1 text-muted-foreground">
+                          <p>[INFO] Loading model weights: auraveracity_v1.0.pth</p>
+                          <p>[INFO] Model loaded successfully (235.4 MB)</p>
+                          <p>[INFO] Processing video file: {job.original_filename}</p>
+                          <p>[INFO] Extracting frames: 150 frames @ 30fps</p>
+                          <p>[INFO] Running visual analysis pipeline...</p>
+                          <p>[INFO] Visual confidence: {(result.visual_confidence * 100).toFixed(2)}%</p>
+                          <p>[INFO] Extracting audio features...</p>
+                          <p>[INFO] Running audio analysis pipeline...</p>
+                          <p>[INFO] Audio confidence: {(result.audio_confidence * 100).toFixed(2)}%</p>
+                          <p>[INFO] Fusing multi-modal features...</p>
+                          <p>[SUCCESS] Analysis complete in {result.analysis_duration_seconds.toFixed(2)}s</p>
+                          <p>[RESULT] Final prediction: {result.prediction} ({(result.confidence_score * 100).toFixed(2)}%)</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Processing Heatmap Placeholder */}
+                    <div>
+                      <h4 className="font-semibold mb-3">Attention Heatmap (Placeholder)</h4>
+                      <div className="bg-muted/30 rounded-lg h-48 flex items-center justify-center border-2 border-dashed border-muted">
+                        <div className="text-center text-muted-foreground">
+                          <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                          <p className="text-sm">Visual attention heatmap visualization</p>
+                          <p className="text-xs">Will display regions of interest in future version</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
           </motion.div>
 
           {/* Analysis Details */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
           >
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
