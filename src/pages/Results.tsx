@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Navigate, Link } from 'react-router-dom';
+import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,8 +16,6 @@ import {
   Eye, 
   Volume2, 
   Clock, 
-  Copy,
-  Share2,
   Download,
   FileVideo,
   Calendar,
@@ -26,9 +24,12 @@ import {
   ChevronUp,
   Activity,
   Layers,
-  BarChart3
+  BarChart3,
+  Settings,
+  LogOut
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { SettingsPanel } from '@/components/SettingsPanel';
 
 interface DetectionResult {
   id: string;
@@ -52,11 +53,13 @@ interface DetectionJob {
 
 const Results = () => {
   const { jobId } = useParams<{ jobId: string }>();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [job, setJob] = useState<DetectionJob | null>(null);
   const [result, setResult] = useState<DetectionResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [nerdModeOpen, setNerdModeOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -163,12 +166,10 @@ const Results = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Link to="/dashboard">
-              <Button className="w-full">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
+            <Button className="w-full" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -179,40 +180,57 @@ const Results = () => {
   const isFake = result.prediction === 'FAKE';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link to="/dashboard">
-              <Button variant="ghost" size="sm">
+    <>
+      <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 transition-smooth"
+      >
+        {/* Header */}
+        <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                Aura Veracity
+              </h1>
+              <span className="text-sm text-muted-foreground">Results</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate('/dashboard')}
+                className="transition-smooth hover:shadow-glow-primary"
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Dashboard
               </Button>
-            </Link>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-              Analysis Results
-            </h1>
+              <Button variant="outline" size="sm" onClick={downloadReport}>
+                <Download className="w-4 h-4 mr-2" />
+                Report
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setSettingsOpen(true)}
+                className="transition-smooth hover:shadow-glow-primary"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
+              </Button>
+              <Button variant="outline" size="sm" onClick={signOut}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline" size="sm" onClick={downloadReport}>
-              <Download className="w-4 h-4 mr-2" />
-              Download Report
-            </Button>
-            <Button variant="outline" size="sm" onClick={copyResultsLink}>
-              <Copy className="w-4 h-4 mr-2" />
-              Copy Link
-            </Button>
-            <Button variant="outline" size="sm">
-              <Share2 className="w-4 h-4 mr-2" />
-              Share
-            </Button>
-          </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto space-y-6">
           {/* Summary Card with Thumbnail */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -671,9 +689,10 @@ const Results = () => {
               </TabsContent>
             </Tabs>
           </motion.div>
+          </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </>
   );
 };
 

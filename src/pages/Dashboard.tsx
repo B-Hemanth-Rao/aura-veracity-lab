@@ -1,13 +1,15 @@
 import { useState, useCallback } from 'react';
-import { Navigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Upload, FileVideo, Loader2, LogOut, History, RotateCcw } from 'lucide-react';
+import { Upload, FileVideo, Loader2, LogOut, History, RotateCcw, Settings } from 'lucide-react';
+import { SettingsPanel } from '@/components/SettingsPanel';
+import { AnalyzingAnimation } from '@/components/AnalyzingAnimation';
 
 interface DetectionJob {
   id: string;
@@ -18,10 +20,13 @@ interface DetectionJob {
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [currentJob, setCurrentJob] = useState<DetectionJob | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   if (!user) {
     return <Navigate to="/auth" replace />;
@@ -44,12 +49,11 @@ const Dashboard = () => {
         setCurrentJob(job);
 
         if (job.status === 'completed') {
-          toast({
-            title: "Analysis Complete!",
-            description: "Your video has been analyzed successfully.",
-          });
-          // Redirect to results page
-          window.location.href = `/results/${jobId}`;
+          // Show analyzing animation for 2 seconds before navigating
+          setAnalyzing(true);
+          setTimeout(() => {
+            navigate(`/results/${jobId}`);
+          }, 2000);
           return;
         } else if (job.status === 'failed') {
           toast({
@@ -190,9 +194,18 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+    <>
+      <AnimatePresence>
+        {analyzing && currentJob && (
+          <AnalyzingAnimation fileName={currentJob.original_filename} />
+        )}
+      </AnimatePresence>
+
+      <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 transition-smooth">
+        {/* Header */}
+        <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
@@ -204,6 +217,15 @@ const Dashboard = () => {
             <Button variant="outline" size="sm">
               <History className="w-4 h-4 mr-2" />
               History
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setSettingsOpen(true)}
+              className="transition-smooth hover:shadow-glow-primary"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
             </Button>
             <Button variant="outline" size="sm" onClick={signOut}>
               <LogOut className="w-4 h-4 mr-2" />
@@ -337,7 +359,8 @@ const Dashboard = () => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
