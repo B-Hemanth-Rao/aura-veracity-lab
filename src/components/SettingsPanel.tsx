@@ -1,11 +1,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Moon, Sun, Film, Sparkles, User, Lock, Clock } from 'lucide-react';
+import { X, Moon, Sun, Film, Sparkles, User, Lock, Clock, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useTheme, Theme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ const mockRecentUploads = [
 
 export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
   const { theme, setTheme } = useTheme();
+  const { user } = useAuth();
 
   return (
     <AnimatePresence>
@@ -89,26 +91,29 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                   <CardDescription>Choose your preferred theme</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {themeOptions.map((option) => (
+                {themeOptions.map((option) => (
                     <motion.button
                       key={option.value}
                       onClick={() => setTheme(option.value)}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      className={`w-full p-4 rounded-lg border transition-all text-left ${
                         theme === option.value
-                          ? 'border-primary bg-primary/10 shadow-glow-primary'
-                          : 'border-border hover:border-primary/50'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border/50 hover:border-primary/30 hover:bg-muted/30'
                       }`}
                     >
-                      <div className="flex items-center space-x-3">
-                        <div className={`${theme === option.value ? 'text-primary' : 'text-muted-foreground'}`}>
+                      <div className="flex items-center gap-3">
+                        <div className={theme === option.value ? 'text-primary' : 'text-muted-foreground'}>
                           {option.icon}
                         </div>
-                        <div className="flex-1">
-                          <div className="font-semibold">{option.label}</div>
-                          <div className="text-xs text-muted-foreground">{option.description}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm">{option.label}</div>
+                          <div className="text-xs text-muted-foreground truncate">{option.description}</div>
                         </div>
+                        {theme === option.value && (
+                          <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                        )}
                       </div>
                     </motion.button>
                   ))}
@@ -127,12 +132,17 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Display Name</Label>
-                    <Input id="name" placeholder="Your name" className="glass-strong" />
+                    <Input id="name" placeholder="Your name" className="bg-background/50" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="your@email.com" className="glass-strong" disabled />
-                    <p className="text-xs text-muted-foreground">Email changes coming soon</p>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      value={user?.email || ''} 
+                      className="bg-background/50" 
+                      disabled 
+                    />
                   </div>
                   <Separator />
                   <Button variant="outline" className="w-full">
