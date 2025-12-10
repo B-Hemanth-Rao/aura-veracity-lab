@@ -1,102 +1,136 @@
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Shield, Menu } from "lucide-react";
-import { useState } from "react";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Shield, Menu, X } from 'lucide-react';
+
+const navLinks = ['Features', 'How it Works', 'Pricing', 'About'];
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <motion.nav
-      className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-glass-border/30"
+      className="fixed top-0 left-0 right-0 z-50 glass-strong border-b border-border/30"
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
     >
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <motion.div
-            className="flex items-center gap-2"
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.2 }}
+          <motion.button
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => navigate('/')}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
           >
-            <Shield className="w-8 h-8 text-primary" />
-            <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            <Shield className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
+            <span className="text-xl sm:text-2xl font-bold text-gradient">
               Aura Veracity
             </span>
-          </motion.div>
+          </motion.button>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
-            {["Features", "How it Works", "Pricing", "About"].map((item) => (
+          {/* Desktop navigation */}
+          <div className="hidden lg:flex items-center gap-8">
+            {navLinks.map((item) => (
               <motion.a
                 key={item}
-                href="#"
-                className="text-muted-foreground hover:text-primary transition-smooth relative"
+                href={`#${item.toLowerCase().replace(' ', '-')}`}
+                className="relative text-muted-foreground hover:text-foreground transition-smooth"
                 whileHover={{ y: -2 }}
               >
                 {item}
                 <motion.div
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary origin-left"
+                  className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary origin-left"
                   initial={{ scaleX: 0 }}
                   whileHover={{ scaleX: 1 }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ duration: 0.2 }}
                 />
               </motion.a>
             ))}
           </div>
 
-          {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-4">
-            <Button variant="ghost" className="text-muted-foreground">
+          {/* Desktop CTA */}
+          <div className="hidden lg:flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/auth?mode=signin')}
+              className="text-muted-foreground hover:text-foreground"
+            >
               Sign In
             </Button>
-            <Button variant="hero">
+            <Button 
+              variant="default"
+              onClick={() => navigate('/auth?mode=signup')}
+            >
               Get Started
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile menu button */}
           <Button
             variant="ghost"
-            size="sm"
-            className="md:hidden"
+            size="icon"
+            className="lg:hidden"
             onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle menu"
           >
-            <Menu className="w-5 h-5" />
+            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
         </div>
 
-        {/* Mobile Menu */}
-        {isOpen && (
-          <motion.div
-            className="md:hidden mt-4 pt-4 border-t border-glass-border/30"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="flex flex-col gap-4">
-              {["Features", "How it Works", "Pricing", "About"].map((item) => (
-                <a
-                  key={item}
-                  href="#"
-                  className="text-muted-foreground hover:text-primary transition-smooth py-2"
-                >
-                  {item}
-                </a>
-              ))}
-              <div className="flex flex-col gap-2 pt-4 border-t border-glass-border/30">
-                <Button variant="ghost" className="justify-start">
-                  Sign In
-                </Button>
-                <Button variant="hero" className="justify-start">
-                  Get Started
-                </Button>
+        {/* Mobile menu */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              className="lg:hidden mt-4 pt-4 border-t border-border/30"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex flex-col gap-3">
+                {navLinks.map((item, index) => (
+                  <motion.a
+                    key={item}
+                    href={`#${item.toLowerCase().replace(' ', '-')}`}
+                    className="text-muted-foreground hover:text-foreground transition-smooth py-2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {item}
+                  </motion.a>
+                ))}
+                <div className="flex flex-col gap-2 pt-4 border-t border-border/30">
+                  <Button 
+                    variant="ghost" 
+                    className="justify-start"
+                    onClick={() => {
+                      navigate('/auth?mode=signin');
+                      setIsOpen(false);
+                    }}
+                  >
+                    Sign In
+                  </Button>
+                  <Button 
+                    variant="default"
+                    className="justify-start"
+                    onClick={() => {
+                      navigate('/auth?mode=signup');
+                      setIsOpen(false);
+                    }}
+                  >
+                    Get Started
+                  </Button>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.nav>
   );

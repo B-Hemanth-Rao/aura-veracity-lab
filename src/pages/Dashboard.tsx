@@ -1,30 +1,31 @@
 import { useState, useCallback } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Upload, FileVideo, Loader2, LogOut, History, RotateCcw, Settings } from 'lucide-react';
+import { History } from 'lucide-react';
+import { PageHeader } from '@/components/ui/page-header';
+import { PageContainer } from '@/components/ui/page-container';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { AnalyzingAnimation } from '@/components/AnalyzingAnimation';
+import { VideoUploader } from '@/components/dashboard/VideoUploader';
+import { AnalysisProgress } from '@/components/dashboard/AnalysisProgress';
 
 interface DetectionJob {
   id: string;
   original_filename: string;
-  status: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
   upload_timestamp: string;
 }
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [uploading, setUploading] = useState(false);
   const [currentJob, setCurrentJob] = useState<DetectionJob | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [dragActive, setDragActive] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -34,7 +35,7 @@ const Dashboard = () => {
 
   const pollJobStatus = useCallback(async (jobId: string) => {
     let attempts = 0;
-    const maxAttempts = 60; // 5 minutes max
+    const maxAttempts = 60;
     
     const poll = async () => {
       try {
@@ -46,10 +47,9 @@ const Dashboard = () => {
 
         if (error) throw error;
 
-        setCurrentJob(job);
+        setCurrentJob(job as DetectionJob);
 
         if (job.status === 'completed') {
-          // Show analyzing animation for 2 seconds before navigating
           setAnalyzing(true);
           setTimeout(() => {
             navigate(`/results/${jobId}`);
@@ -59,15 +59,14 @@ const Dashboard = () => {
           toast({
             variant: "destructive",
             title: "Analysis Failed",
-            description: "There was an error processing your video.",
+            description: "There was an error processing your video. Please try again.",
           });
-          setCurrentJob(null);
           return;
         }
 
         attempts++;
         if (attempts < maxAttempts && (job.status === 'pending' || job.status === 'processing')) {
-          setTimeout(poll, 5000); // Poll every 5 seconds
+          setTimeout(poll, 5000);
         } else if (attempts >= maxAttempts) {
           toast({
             variant: "destructive",
@@ -88,17 +87,15 @@ const Dashboard = () => {
     };
 
     poll();
-  }, []);
+  }, [navigate]);
 
   const handleFileUpload = async (file: File) => {
-    if (!file) return;
-
     // Validate file type
     if (!file.type.startsWith('video/')) {
       toast({
         variant: "destructive",
         title: "Invalid file type",
-        description: "Please upload a video file.",
+        description: "Please upload a video file (MP4, AVI, MOV, WebM).",
       });
       return;
     }
@@ -117,6 +114,11 @@ const Dashboard = () => {
     setUploadProgress(0);
 
     try {
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 90));
+      }, 200);
+
       // Upload file to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
@@ -124,6 +126,8 @@ const Dashboard = () => {
       const { error: uploadError } = await supabase.storage
         .from('videos')
         .upload(fileName, file);
+
+      clearInterval(progressInterval);
 
       if (uploadError) throw uploadError;
 
@@ -141,7 +145,7 @@ const Dashboard = () => {
 
       if (jobError) throw jobError;
 
-      setCurrentJob(job);
+      setCurrentJob(job as DetectionJob);
       setUploadProgress(100);
 
       // Start AI processing
@@ -154,7 +158,7 @@ const Dashboard = () => {
 
       toast({
         title: "Upload successful!",
-        description: "Your video is now being analyzed.",
+        description: "Your video is now being analyzed by our AI.",
       });
 
     } catch (error: any) {
@@ -162,31 +166,13 @@ const Dashboard = () => {
       toast({
         variant: "destructive",
         title: "Upload failed",
-        description: error.message || "Failed to upload video.",
+        description: error.message || "Failed to upload video. Please try again.",
       });
+      setCurrentJob(null);
     } finally {
       setUploading(false);
     }
   };
-
-  const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileUpload(e.dataTransfer.files[0]);
-    }
-  }, []);
 
   const resetUpload = () => {
     setCurrentJob(null);
@@ -203,162 +189,33 @@ const Dashboard = () => {
 
       <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 transition-smooth">
-        {/* Header */}
-        <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary-foreground bg-clip-text text-transparent">
-              Aura Veracity
-            </h1>
-            <span className="text-sm text-muted-foreground">Dashboard</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-              <History className="w-4 h-4 mr-2" />
-              History
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+        <PageHeader 
+          subtitle="Dashboard"
+          onSettingsClick={() => setSettingsOpen(true)}
+          actions={
+            <Button variant="ghost" size="sm" className="gap-2">
+              <History className="w-4 h-4" />
+              <span className="hidden sm:inline">History</span>
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setSettingsOpen(true)}
-              className="transition-smooth hover:shadow-glow-primary"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </Button>
-            <Button variant="outline" size="sm" onClick={signOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </header>
+          }
+        />
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
+        <PageContainer maxWidth="2xl">
           {!currentJob ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Card className="bg-card/80 backdrop-blur-sm border-border/50">
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl">Upload Video for Analysis</CardTitle>
-                  <CardDescription>
-                    Upload a video file to detect potential deepfakes using our advanced AI
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div
-                    className={`relative border-2 border-dashed rounded-lg p-12 text-center transition-colors ${
-                      dragActive 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                    onDragEnter={handleDrag}
-                    onDragLeave={handleDrag}
-                    onDragOver={handleDrag}
-                    onDrop={handleDrop}
-                  >
-                    <motion.div
-                      animate={dragActive ? { scale: 1.05 } : { scale: 1 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <FileVideo className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                      <h3 className="text-lg font-semibold mb-2">
-                        Drag and drop your video here
-                      </h3>
-                      <p className="text-muted-foreground mb-4">
-                        or click to browse files
-                      </p>
-                      <input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) => {
-                          if (e.target.files?.[0]) {
-                            handleFileUpload(e.target.files[0]);
-                          }
-                        }}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        disabled={uploading}
-                      />
-                      <Button disabled={uploading}>
-                        <Upload className="w-4 h-4 mr-2" />
-                        Choose Video File
-                      </Button>
-                    </motion.div>
-                  </div>
-                  <div className="mt-4 text-xs text-muted-foreground text-center">
-                    Supported formats: MP4, AVI, MOV, WebM • Max size: 50MB
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+            <VideoUploader 
+              onUpload={handleFileUpload}
+              isUploading={uploading}
+              uploadProgress={uploadProgress}
+            />
           ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Card className="bg-card/80 backdrop-blur-sm border-border/50">
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl">
-                    {currentJob.status === 'pending' && "Preparing Analysis..."}
-                    {currentJob.status === 'processing' && "AI Analysis in Progress"}
-                    {currentJob.status === 'completed' && "Analysis Complete!"}
-                    {currentJob.status === 'failed' && "Analysis Failed"}
-                  </CardTitle>
-                  <CardDescription>
-                    File: {currentJob.original_filename}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {uploading && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Uploading...</span>
-                        <span>{Math.round(uploadProgress)}%</span>
-                      </div>
-                      <Progress value={uploadProgress} />
-                    </div>
-                  )}
-
-                  {currentJob.status === 'processing' && (
-                    <div className="text-center">
-                      <motion.div
-                        className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                      >
-                        <Loader2 className="w-8 h-8 text-primary" />
-                      </motion.div>
-                      <div className="space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          Our AI is analyzing your video for deepfake indicators...
-                        </p>
-                        <div className="text-xs text-muted-foreground">
-                          <p>🔍 Scanning facial regions and temporal consistency</p>
-                          <p>🎵 Analyzing audio-visual synchronization</p>
-                          <p>🧠 Processing with neural networks</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-center">
-                    <Button variant="outline" onClick={resetUpload}>
-                      <RotateCcw className="w-4 h-4 mr-2" />
-                      Upload Another Video
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+            <AnalysisProgress 
+              fileName={currentJob.original_filename}
+              status={currentJob.status}
+              onReset={resetUpload}
+            />
           )}
-        </div>
-      </div>
+        </PageContainer>
       </div>
     </>
   );

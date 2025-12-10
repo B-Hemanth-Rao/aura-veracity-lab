@@ -1,56 +1,86 @@
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Shield, Brain, Zap } from "lucide-react";
-import heroImage from "@/assets/hero-neural-bg.jpg";
+import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Shield, Brain, Zap } from 'lucide-react';
+import heroImage from '@/assets/hero-neural-bg.jpg';
 
 const Hero = () => {
+  const navigate = useNavigate();
+
+  // Memoize floating particles
+  const particles = useMemo(() => 
+    [...Array(8)].map((_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      duration: 3 + Math.random() * 2,
+      delay: Math.random() * 2,
+    })),
+  []);
+
+  const features = [
+    {
+      icon: Brain,
+      title: 'Multimodal Analysis',
+      description: 'Analyzes both video frames and audio signals for comprehensive detection'
+    },
+    {
+      icon: Shield,
+      title: '99.7% Accuracy',
+      description: 'State-of-the-art neural networks trained on millions of samples'
+    },
+    {
+      icon: Zap,
+      title: 'Instant Results',
+      description: 'Get detailed authenticity reports in seconds, not minutes'
+    }
+  ];
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
         <img 
           src={heroImage} 
-          alt="Neural Network Background" 
-          className="w-full h-full object-cover opacity-30"
+          alt="" 
+          className="w-full h-full object-cover opacity-20"
+          loading="eager"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
       </div>
       
-      {/* Floating Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(6)].map((_, i) => (
+      {/* Floating particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {particles.map((particle) => (
           <motion.div
-            key={i}
-            className="absolute w-2 h-2 bg-primary rounded-full opacity-60"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [-20, 20, -20],
-              opacity: [0.3, 1, 0.3],
-            }}
+            key={particle.id}
+            className="absolute w-2 h-2 bg-primary rounded-full opacity-40"
+            style={{ left: `${particle.left}%`, top: `${particle.top}%` }}
+            animate={{ y: [-20, 20, -20], opacity: [0.2, 0.6, 0.2] }}
             transition={{
-              duration: 3 + Math.random() * 2,
+              duration: particle.duration,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: particle.delay,
+              ease: 'easeInOut',
             }}
           />
         ))}
       </div>
 
-      {/* Main Content */}
-      <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
+      {/* Main content */}
+      <div className="relative z-10 max-w-6xl mx-auto px-6 text-center pt-24 pb-16">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-8"
+          className="mb-10"
         >
+          {/* Badge */}
           <motion.div
-            className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-6"
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
+            className="inline-flex items-center gap-2 glass px-4 py-2 rounded-full mb-8"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
             <Shield className="w-4 h-4 text-primary" />
@@ -59,13 +89,12 @@ const Hero = () => {
             </span>
           </motion.div>
 
-          <h1 className="text-6xl md:text-8xl font-bold leading-tight mb-6">
+          {/* Headline */}
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold leading-tight mb-8">
             <span className="text-foreground">Separate</span>
             <br />
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
-              Truth
-            </span>
-            {" "}
+            <span className="text-gradient">Truth</span>
+            {' '}
             <span className="text-foreground">from</span>
             <br />
             <span className="bg-gradient-secondary bg-clip-text text-transparent">
@@ -73,69 +102,71 @@ const Hero = () => {
             </span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-8">
+          {/* Subheadline */}
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
+          >
             Aura Veracity uses cutting-edge multimodal AI to detect deepfakes with unprecedented accuracy. 
             Upload any video and get instant, reliable authenticity analysis.
-          </p>
+          </motion.p>
         </motion.div>
 
         {/* CTA Buttons */}
         <motion.div
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12"
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.6 }}
         >
-          <Button variant="hero" size="lg" className="text-lg px-8 py-6" onClick={() => window.location.href = '/auth?mode=signup'}>
+          <Button 
+            variant="hero" 
+            size="lg" 
+            className="text-lg px-8 py-6 min-w-[180px]" 
+            onClick={() => navigate('/auth?mode=signup')}
+          >
             <Brain className="w-5 h-5 mr-2" />
-            Sign Up
+            Get Started
           </Button>
-          <Button variant="glass" size="lg" className="text-lg px-8 py-6" onClick={() => window.location.href = '/auth?mode=signin'}>
-            Login
+          <Button 
+            variant="glass" 
+            size="lg" 
+            className="text-lg px-8 py-6 min-w-[180px]" 
+            onClick={() => navigate('/auth?mode=signin')}
+          >
+            Sign In
           </Button>
         </motion.div>
 
-        {/* Feature Cards */}
+        {/* Feature cards */}
         <motion.div
-          className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto"
+          className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 0.8 }}
+          transition={{ delay: 0.8, duration: 0.8 }}
         >
-          {[
-            {
-              icon: Brain,
-              title: "Multimodal Analysis",
-              description: "Analyzes both video frames and audio signals for comprehensive detection"
-            },
-            {
-              icon: Shield,
-              title: "99.7% Accuracy",
-              description: "State-of-the-art neural networks trained on millions of samples"
-            },
-            {
-              icon: Zap,
-              title: "Instant Results",
-              description: "Get detailed authenticity reports in seconds, not minutes"
-            }
-          ].map((feature, index) => (
+          {features.map((feature, index) => (
             <motion.div
               key={feature.title}
-              className="glass-strong p-6 rounded-xl hover:scale-105 transition-smooth"
+              className="glass-strong p-6 rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-glow-primary"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.2 + index * 0.2, duration: 0.6 }}
+              transition={{ delay: 1 + index * 0.15, duration: 0.5 }}
             >
               <feature.icon className="w-8 h-8 text-primary mb-4 mx-auto" />
-              <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-              <p className="text-muted-foreground">{feature.description}</p>
+              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {feature.description}
+              </p>
             </motion.div>
           ))}
         </motion.div>
       </div>
 
-      {/* Bottom Gradient */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent"></div>
+      {/* Bottom gradient */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
     </section>
   );
 };
