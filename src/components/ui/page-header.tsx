@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Settings, LogOut } from 'lucide-react';
+import { Settings, LogOut, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -21,7 +21,7 @@ export const PageHeader = ({
   showBackButton = false,
   backTo = '/dashboard'
 }: PageHeaderProps) => {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -44,14 +44,22 @@ export const PageHeader = ({
                 ← Back
               </Button>
             )}
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                {title}
-              </h1>
-              {subtitle && (
-                <span className="text-sm text-muted-foreground">{subtitle}</span>
-              )}
-            </div>
+            <motion.button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 cursor-pointer"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Shield className="w-7 h-7 text-primary" />
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                  {title}
+                </h1>
+                {subtitle && (
+                  <span className="text-sm text-muted-foreground">{subtitle}</span>
+                )}
+              </div>
+            </motion.button>
           </div>
           
           <div className="flex items-center gap-2">
@@ -66,14 +74,16 @@ export const PageHeader = ({
                 <Settings className="w-5 h-5" />
               </Button>
             )}
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={signOut}
-              className="transition-smooth hover:bg-destructive/10 hover:text-destructive"
-            >
-              <LogOut className="w-5 h-5" />
-            </Button>
+            {user && (
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={signOut}
+                className="transition-smooth hover:bg-destructive/10 hover:text-destructive"
+              >
+                <LogOut className="w-5 h-5" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Moon, Sun, Film, Sparkles, User, Lock, Clock, Check } from 'lucide-react';
+import { X, Moon, Sun, Film, Sparkles, User, Lock, Clock, Check, LogIn, Mail, Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useTheme, Theme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -49,7 +52,39 @@ const mockRecentUploads = [
 
 export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
   const { theme, setTheme } = useTheme();
-  const { user } = useAuth();
+  const { user, signIn, signOut } = useAuth();
+  const navigate = useNavigate();
+  
+  // Login form state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleQuickLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Missing fields",
+        description: "Please enter both email and password.",
+      });
+      return;
+    }
+
+    setIsLoggingIn(true);
+    const { error } = await signIn(email, password);
+    setIsLoggingIn(false);
+
+    if (!error) {
+      setEmail('');
+      setPassword('');
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in.",
+      });
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -84,14 +119,14 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 </Button>
               </div>
 
-              {/* Theme Selector */}
+              {/* Theme Selector - Always visible */}
               <Card className="glass transition-smooth">
                 <CardHeader>
                   <CardTitle className="text-lg">Appearance</CardTitle>
                   <CardDescription>Choose your preferred theme</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                {themeOptions.map((option) => (
+                  {themeOptions.map((option) => (
                     <motion.button
                       key={option.value}
                       onClick={() => setTheme(option.value)}
@@ -120,73 +155,151 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                 </CardContent>
               </Card>
 
-              {/* Profile Section */}
-              <Card className="glass transition-smooth">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center">
-                    <User className="w-5 h-5 mr-2" />
-                    Profile
-                  </CardTitle>
-                  <CardDescription>Manage your account details</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Display Name</Label>
-                    <Input id="name" placeholder="Your name" className="bg-background/50" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      value={user?.email || ''} 
-                      className="bg-background/50" 
-                      disabled 
-                    />
-                  </div>
-                  <Separator />
-                  <Button variant="outline" className="w-full">
-                    <Lock className="w-4 h-4 mr-2" />
-                    Change Password
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Recent Activity */}
-              <Card className="glass transition-smooth">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center">
-                    <Clock className="w-5 h-5 mr-2" />
-                    Recent Uploads
-                  </CardTitle>
-                  <CardDescription>Your latest video analyses</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {mockRecentUploads.map((upload) => (
-                    <motion.div
-                      key={upload.id}
-                      whileHover={{ x: 4 }}
-                      className="p-3 rounded-lg bg-muted/50 hover:bg-muted cursor-pointer transition-smooth"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{upload.name}</p>
-                          <p className="text-xs text-muted-foreground">{upload.date}</p>
-                        </div>
-                        <div className={`ml-3 text-sm font-bold ${
-                          upload.confidence > 50 ? 'text-success' : 'text-destructive'
-                        }`}>
-                          {upload.confidence}%
+              {/* Login Section - Show when not logged in */}
+              {!user ? (
+                <Card className="glass transition-smooth">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center">
+                      <LogIn className="w-5 h-5 mr-2" />
+                      Sign In
+                    </CardTitle>
+                    <CardDescription>Login to access all features</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <form onSubmit={handleQuickLogin} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="login-email">Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input 
+                            id="login-email" 
+                            type="email" 
+                            placeholder="your@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="bg-background/50 pl-10" 
+                          />
                         </div>
                       </div>
-                    </motion.div>
-                  ))}
-                  <p className="text-xs text-muted-foreground text-center pt-2">
-                    {/* Future enhancement: expand to full result logs and downloadable reports */}
-                    Full history and detailed logs coming soon
-                  </p>
-                </CardContent>
-              </Card>
+                      <div className="space-y-2">
+                        <Label htmlFor="login-password">Password</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input 
+                            id="login-password" 
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="bg-background/50 pl-10 pr-10" 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                      <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                        {isLoggingIn ? 'Signing in...' : 'Sign In'}
+                      </Button>
+                    </form>
+                    <Separator />
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground mb-2">Don't have an account?</p>
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => {
+                          onClose();
+                          navigate('/auth?mode=signup');
+                        }}
+                      >
+                        Create Account
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  {/* Profile Section - Show when logged in */}
+                  <Card className="glass transition-smooth">
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center">
+                        <User className="w-5 h-5 mr-2" />
+                        Profile
+                      </CardTitle>
+                      <CardDescription>Manage your account details</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Display Name</Label>
+                        <Input id="name" placeholder="Your name" className="bg-background/50" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input 
+                          id="email" 
+                          type="email" 
+                          value={user?.email || ''} 
+                          className="bg-background/50" 
+                          disabled 
+                        />
+                      </div>
+                      <Separator />
+                      <Button variant="outline" className="w-full">
+                        <Lock className="w-4 h-4 mr-2" />
+                        Change Password
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        className="w-full"
+                        onClick={signOut}
+                      >
+                        Sign Out
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Recent Activity - Show when logged in */}
+                  <Card className="glass transition-smooth">
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center">
+                        <Clock className="w-5 h-5 mr-2" />
+                        Recent Uploads
+                      </CardTitle>
+                      <CardDescription>Your latest video analyses</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {mockRecentUploads.map((upload) => (
+                        <motion.div
+                          key={upload.id}
+                          whileHover={{ x: 4 }}
+                          className="p-3 rounded-lg bg-muted/50 hover:bg-muted cursor-pointer transition-smooth"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{upload.name}</p>
+                              <p className="text-xs text-muted-foreground">{upload.date}</p>
+                            </div>
+                            <div className={`ml-3 text-sm font-bold ${
+                              upload.confidence > 50 ? 'text-success' : 'text-destructive'
+                            }`}>
+                              {upload.confidence}%
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                      <p className="text-xs text-muted-foreground text-center pt-2">
+                        {/* Future enhancement: expand to full result logs and downloadable reports */}
+                        Full history and detailed logs coming soon
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           </motion.div>
         </>
