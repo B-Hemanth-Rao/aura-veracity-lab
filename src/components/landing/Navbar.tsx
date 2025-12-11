@@ -4,7 +4,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Shield, Menu, X } from 'lucide-react';
 
-const navLinks = ['Features', 'How it Works', 'Pricing', 'About'];
+const navLinks = [
+  { label: 'Features', href: '#features' },
+  { label: 'How it Works', href: '#how-it-works' },
+  { label: 'Pricing', href: '#pricing' },
+  { label: 'About', href: '#about' },
+];
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,12 +41,12 @@ const Navbar = () => {
           <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((item) => (
               <motion.a
-                key={item}
-                href={`#${item.toLowerCase().replace(' ', '-')}`}
+                key={item.label}
+                href={item.href}
                 className="relative text-muted-foreground hover:text-foreground transition-smooth"
                 whileHover={{ y: -2 }}
               >
-                {item}
+                {item.label}
                 <motion.div
                   className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary origin-left"
                   initial={{ scaleX: 0 }}
@@ -94,15 +99,15 @@ const Navbar = () => {
               <div className="flex flex-col gap-3">
                 {navLinks.map((item, index) => (
                   <motion.a
-                    key={item}
-                    href={`#${item.toLowerCase().replace(' ', '-')}`}
+                    key={item.label}
+                    href={item.href}
                     className="text-muted-foreground hover:text-foreground transition-smooth py-2"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={() => setIsOpen(false)}
                   >
-                    {item}
+                    {item.label}
                   </motion.a>
                 ))}
                 <div className="flex flex-col gap-2 pt-4 border-t border-border/30">
