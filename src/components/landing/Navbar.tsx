@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Shield, Menu, X, Settings } from 'lucide-react';
+import { Shield, Menu, X, Settings, LogOut, User } from 'lucide-react';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 const navLinks = [
   { label: 'Features', href: '#features' },
@@ -16,16 +17,55 @@ const navLinks = [
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileName, setProfileName] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const location = useLocation();
+  const { user, loading, signOut } = useAuth();
+  
+  const isHomePage = location.pathname === '/';
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) {
+        setProfileName(null);
+        return;
+      }
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, username')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (data) {
+        setProfileName(data.full_name || data.username || null);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  const displayName = profileName || user?.email?.split('@')[0] || 'User';
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
+    
+    if (!isHomePage) {
+      navigate('/' + href);
+      return;
+    }
+    
     const targetId = href.replace('#', '');
     const element = document.getElementById(targetId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+    setIsOpen(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
     setIsOpen(false);
   };
 
@@ -55,25 +95,27 @@ const Navbar = () => {
             </motion.button>
 
             {/* Desktop navigation */}
-            <div className="hidden lg:flex items-center gap-8">
-              {navLinks.map((item) => (
-                <motion.a
-                  key={item.label}
-                  href={item.href}
-                  onClick={(e) => handleNavClick(e, item.href)}
-                  className="relative text-muted-foreground hover:text-foreground transition-smooth cursor-pointer"
-                  whileHover={{ y: -2 }}
-                >
-                  {item.label}
-                  <motion.div
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary origin-left"
-                    initial={{ scaleX: 0 }}
-                    whileHover={{ scaleX: 1 }}
-                    transition={{ duration: 0.2 }}
-                  />
-                </motion.a>
-              ))}
-            </div>
+            {isHomePage && (
+              <div className="hidden lg:flex items-center gap-8">
+                {navLinks.map((item) => (
+                  <motion.a
+                    key={item.label}
+                    href={item.href}
+                    onClick={(e) => handleNavClick(e, item.href)}
+                    className="relative text-muted-foreground hover:text-foreground transition-smooth cursor-pointer"
+                    whileHover={{ y: -2 }}
+                  >
+                    {item.label}
+                    <motion.div
+                      className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary origin-left"
+                      initial={{ scaleX: 0 }}
+                      whileHover={{ scaleX: 1 }}
+                      transition={{ duration: 0.2 }}
+                    />
+                  </motion.a>
+                ))}
+              </div>
+            )}
 
             {/* Desktop CTA */}
             <div className="hidden lg:flex items-center gap-3">
@@ -85,13 +127,30 @@ const Navbar = () => {
               >
                 <Settings className="w-5 h-5" />
               </Button>
-              {user ? (
-                <Button 
-                  variant="default"
-                  onClick={() => navigate('/dashboard')}
-                >
-                  Dashboard
-                </Button>
+              
+              {loading ? (
+                <div className="w-20 h-9 bg-muted/50 rounded animate-pulse" />
+              ) : user ? (
+                <>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground px-3">
+                    <User className="w-4 h-4" />
+                    <span>{displayName}</span>
+                  </div>
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/dashboard')}
+                  >
+                    Dashboard
+                  </Button>
+                  <Button 
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleSignOut}
+                    className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  >
+                    <LogOut className="w-5 h-5" />
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button 
@@ -142,7 +201,7 @@ const Navbar = () => {
                 transition={{ duration: 0.2 }}
               >
                 <div className="flex flex-col gap-3">
-                  {navLinks.map((item, index) => (
+                  {isHomePage && navLinks.map((item, index) => (
                     <motion.a
                       key={item.label}
                       href={item.href}
@@ -156,17 +215,33 @@ const Navbar = () => {
                     </motion.a>
                   ))}
                   <div className="flex flex-col gap-2 pt-4 border-t border-border/30">
-                    {user ? (
-                      <Button 
-                        variant="default"
-                        className="justify-start"
-                        onClick={() => {
-                          navigate('/dashboard');
-                          setIsOpen(false);
-                        }}
-                      >
-                        Dashboard
-                      </Button>
+                    {loading ? (
+                      <div className="h-10 bg-muted/50 rounded animate-pulse" />
+                    ) : user ? (
+                      <>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                          <User className="w-4 h-4" />
+                          <span>{displayName}</span>
+                        </div>
+                        <Button 
+                          variant="default"
+                          className="justify-start"
+                          onClick={() => {
+                            navigate('/dashboard');
+                            setIsOpen(false);
+                          }}
+                        >
+                          Dashboard
+                        </Button>
+                        <Button 
+                          variant="ghost"
+                          className="justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={handleSignOut}
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Sign Out
+                        </Button>
+                      </>
                     ) : (
                       <>
                         <Button 
