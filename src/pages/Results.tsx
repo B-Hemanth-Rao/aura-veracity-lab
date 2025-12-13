@@ -24,12 +24,11 @@ import {
   ChevronUp,
   Activity,
   Layers,
-  BarChart3,
-  Settings,
-  LogOut
+  BarChart3
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SettingsPanel } from '@/components/SettingsPanel';
+import Navbar from '@/components/landing/Navbar';
 
 interface DetectionResult {
   id: string;
@@ -182,22 +181,18 @@ const Results = () => {
   return (
     <>
       <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <Navbar />
 
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 transition-smooth"
+        className="min-h-screen pt-20 bg-gradient-to-br from-background via-background to-primary/5 transition-smooth"
       >
-        {/* Header */}
-        <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
-          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Aura Veracity
-              </h1>
-              <span className="text-sm text-muted-foreground">Results</span>
-            </div>
+        {/* Action Bar */}
+        <div className="border-b border-border/50 bg-card/50 backdrop-blur-sm">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Analysis Results</span>
             <div className="flex items-center space-x-2">
               <Button 
                 variant="outline" 
@@ -212,22 +207,9 @@ const Results = () => {
                 <Download className="w-4 h-4 mr-2" />
                 Report
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setSettingsOpen(true)}
-                className="transition-smooth hover:shadow-glow-primary"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
-              <Button variant="outline" size="sm" onClick={signOut}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
             </div>
           </div>
-        </header>
+        </div>
 
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto space-y-6">

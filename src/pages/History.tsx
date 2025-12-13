@@ -13,6 +13,7 @@ import { PageHeader } from '@/components/ui/page-header';
 import { LoadingState } from '@/components/ui/loading-state';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SettingsPanel } from '@/components/SettingsPanel';
+import Navbar from '@/components/landing/Navbar';
 import { 
   FileVideo, 
   Calendar, 
@@ -140,8 +141,9 @@ const History = () => {
   return (
     <>
       <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <Navbar />
       
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 transition-smooth">
+      <div className="min-h-screen pt-20 bg-gradient-to-br from-background via-background to-primary/5 transition-smooth">
         <PageHeader
           title="Analysis History"
           onSettingsClick={() => setSettingsOpen(true)}
