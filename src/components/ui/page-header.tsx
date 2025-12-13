@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Settings, LogOut, Shield } from 'lucide-react';
+import { Settings, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PageHeaderProps {
   title?: string;
@@ -14,7 +16,7 @@ interface PageHeaderProps {
 }
 
 export const PageHeader = ({ 
-  title = 'Aura Veracity',
+  title,
   subtitle,
   onSettingsClick,
   actions,
@@ -23,13 +25,34 @@ export const PageHeader = ({
 }: PageHeaderProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [profileName, setProfileName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, username')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (data) {
+        setProfileName(data.full_name || data.username || null);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
+  const displayName = profileName || user?.email?.split('@')[0] || 'User';
 
   return (
     <motion.header 
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.4 }}
-      className="sticky top-0 z-40 border-b border-border/50 bg-card/80 backdrop-blur-lg"
+      className="border-b border-border/50 bg-card/80 backdrop-blur-lg"
     >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
@@ -44,25 +67,27 @@ export const PageHeader = ({
                 ← Back
               </Button>
             )}
-            <motion.button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 cursor-pointer"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Shield className="w-7 h-7 text-primary" />
+            {(title || subtitle) && (
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  {title}
-                </h1>
+                {title && (
+                  <h1 className="text-xl font-semibold text-foreground">
+                    {title}
+                  </h1>
+                )}
                 {subtitle && (
                   <span className="text-sm text-muted-foreground">{subtitle}</span>
                 )}
               </div>
-            </motion.button>
+            )}
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {user && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">{displayName}</span>
+              </div>
+            )}
             {actions}
             {onSettingsClick && (
               <Button 

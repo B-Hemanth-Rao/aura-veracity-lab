@@ -12,6 +12,7 @@ import { SettingsPanel } from '@/components/SettingsPanel';
 import { AnalyzingAnimation } from '@/components/AnalyzingAnimation';
 import { VideoUploader } from '@/components/dashboard/VideoUploader';
 import { AnalysisProgress } from '@/components/dashboard/AnalysisProgress';
+import Navbar from '@/components/landing/Navbar';
 
 interface DetectionJob {
   id: string;
@@ -189,8 +190,9 @@ const Dashboard = () => {
 
       <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-        <PageHeader 
+      <Navbar />
+      <div className="min-h-screen pt-20 bg-gradient-to-br from-background via-background to-primary/5">
+        <PageHeader
           subtitle="Dashboard"
           onSettingsClick={() => setSettingsOpen(true)}
           actions={
