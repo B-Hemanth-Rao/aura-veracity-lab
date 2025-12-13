@@ -2,11 +2,13 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Shield, Brain, Zap } from 'lucide-react';
+import { Shield, Brain, Zap, LayoutDashboard } from 'lucide-react';
 import heroImage from '@/assets/hero-neural-bg.jpg';
+import { useAuth } from '@/hooks/useAuth';
 
 const Hero = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
 
   // Memoize floating particles
   const particles = useMemo(() => 
@@ -121,23 +123,39 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.6 }}
         >
-          <Button 
-            variant="hero" 
-            size="lg" 
-            className="text-lg px-8 py-6 min-w-[180px]" 
-            onClick={() => navigate('/auth?mode=signup')}
-          >
-            <Brain className="w-5 h-5 mr-2" />
-            Get Started
-          </Button>
-          <Button 
-            variant="glass" 
-            size="lg" 
-            className="text-lg px-8 py-6 min-w-[180px]" 
-            onClick={() => navigate('/auth?mode=signin')}
-          >
-            Sign In
-          </Button>
+          {loading ? (
+            <div className="w-48 h-14 bg-muted/50 rounded-lg animate-pulse" />
+          ) : user ? (
+            <Button 
+              variant="hero" 
+              size="lg" 
+              className="text-lg px-8 py-6 min-w-[180px]" 
+              onClick={() => navigate('/dashboard')}
+            >
+              <LayoutDashboard className="w-5 h-5 mr-2" />
+              Go to Dashboard
+            </Button>
+          ) : (
+            <>
+              <Button 
+                variant="hero" 
+                size="lg" 
+                className="text-lg px-8 py-6 min-w-[180px]" 
+                onClick={() => navigate('/auth?mode=signup')}
+              >
+                <Brain className="w-5 h-5 mr-2" />
+                Get Started
+              </Button>
+              <Button 
+                variant="glass" 
+                size="lg" 
+                className="text-lg px-8 py-6 min-w-[180px]" 
+                onClick={() => navigate('/auth?mode=signin')}
+              >
+                Sign In
+              </Button>
+            </>
+          )}
         </motion.div>
 
         {/* Feature cards */}
