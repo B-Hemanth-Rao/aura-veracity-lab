@@ -19,6 +19,16 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const targetId = href.replace('#', '');
+    const element = document.getElementById(targetId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setIsOpen(false);
+  };
+
   return (
     <>
       <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
@@ -50,7 +60,8 @@ const Navbar = () => {
                 <motion.a
                   key={item.label}
                   href={item.href}
-                  className="relative text-muted-foreground hover:text-foreground transition-smooth"
+                  onClick={(e) => handleNavClick(e, item.href)}
+                  className="relative text-muted-foreground hover:text-foreground transition-smooth cursor-pointer"
                   whileHover={{ y: -2 }}
                 >
                   {item.label}
@@ -135,11 +146,11 @@ const Navbar = () => {
                     <motion.a
                       key={item.label}
                       href={item.href}
-                      className="text-muted-foreground hover:text-foreground transition-smooth py-2"
+                      onClick={(e) => handleNavClick(e, item.href)}
+                      className="text-muted-foreground hover:text-foreground transition-smooth py-2 cursor-pointer"
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      onClick={() => setIsOpen(false)}
                     >
                       {item.label}
                     </motion.a>

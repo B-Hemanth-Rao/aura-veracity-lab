@@ -8,13 +8,23 @@ import Footer from "@/components/landing/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background scroll-smooth">
       <Navbar />
-      <Hero />
-      <Features />
-      <HowItWorks />
-      <Pricing />
-      <About />
+      <section id="hero">
+        <Hero />
+      </section>
+      <section id="features">
+        <Features />
+      </section>
+      <section id="how-it-works">
+        <HowItWorks />
+      </section>
+      <section id="pricing">
+        <Pricing />
+      </section>
+      <section id="about">
+        <About />
+      </section>
       <Footer />
     </div>
   );
