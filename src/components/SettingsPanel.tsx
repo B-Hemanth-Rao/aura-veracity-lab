@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Moon, Sun, Film, Sparkles, User, Lock, Clock, Check, LogIn, Mail, Eye, EyeOff } from 'lucide-react';
+import { X, Moon, Sun, Film, Sparkles, User, Lock, Clock, Check, LogIn, Mail, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,18 @@ import { useTheme, Theme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface SettingsPanelProps {
   isOpen: boolean;
@@ -60,6 +72,41 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('delete-account');
+      
+      if (error) {
+        console.error('Delete account error:', error);
+        toast({
+          variant: "destructive",
+          title: "Failed to delete account",
+          description: error.message || "An error occurred while deleting your account.",
+        });
+        setIsDeleting(false);
+        return;
+      }
+
+      toast({
+        title: "Account deleted",
+        description: "Your account and all associated data have been permanently removed.",
+      });
+      
+      onClose();
+      navigate('/');
+    } catch (error: any) {
+      console.error('Delete account error:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to delete account",
+        description: error.message || "An error occurred while deleting your account.",
+      });
+      setIsDeleting(false);
+    }
+  };
 
   const handleQuickLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -260,6 +307,37 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                       >
                         Sign Out
                       </Button>
+                      <Separator />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            className="w-full border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete Account
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will permanently delete your account, 
+                              all your uploaded videos, detection results, and remove all your data from our servers.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={handleDeleteAccount}
+                              disabled={isDeleting}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              {isDeleting ? 'Deleting...' : 'Delete Account'}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </CardContent>
                   </Card>
 
