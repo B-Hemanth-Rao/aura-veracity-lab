@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Shield, Menu, X, Settings, LogOut, User } from 'lucide-react';
 import { SettingsPanel } from '@/components/SettingsPanel';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -119,6 +120,7 @@ const Navbar = () => {
 
             {/* Desktop CTA */}
             <div className="hidden lg:flex items-center gap-3">
+              <ThemeToggle />
               <Button 
                 variant="ghost" 
                 size="icon"
@@ -172,6 +174,7 @@ const Navbar = () => {
 
             {/* Mobile menu button */}
             <div className="flex items-center gap-2 lg:hidden">
+              <ThemeToggle />
               <Button
                 variant="ghost"
                 size="icon"
