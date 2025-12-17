@@ -24,8 +24,21 @@ import {
   ChevronUp,
   Activity,
   Layers,
-  BarChart3
+  BarChart3,
+  Copy,
+  Share2,
+  FileJson,
+  FileText,
+  Link,
+  Check
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import Navbar from '@/components/landing/Navbar';
@@ -100,39 +113,143 @@ const Results = () => {
     fetchResults();
   }, [jobId, user]);
 
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [resultsCopied, setResultsCopied] = useState(false);
+
   const copyResultsLink = () => {
     navigator.clipboard.writeText(window.location.href);
+    setLinkCopied(true);
     toast({
       title: "Link copied!",
       description: "Results link has been copied to clipboard.",
     });
+    setTimeout(() => setLinkCopied(false), 2000);
   };
 
-  const downloadReport = () => {
-    // Placeholder for report download functionality
+  const copyResultsToClipboard = () => {
+    if (!result || !job) return;
+    
+    const textSummary = `
+AURA VERACITY - Deepfake Detection Report
+==========================================
+
+File: ${job.original_filename}
+Analysis Date: ${new Date(job.upload_timestamp).toLocaleString()}
+
+VERDICT: ${result.prediction}
+Confidence: ${Math.round(result.confidence_score * 100)}%
+
+Visual Confidence: ${(result.visual_confidence * 100).toFixed(1)}%
+Audio Confidence: ${(result.audio_confidence * 100).toFixed(1)}%
+Processing Time: ${Math.round(result.analysis_duration_seconds)}s
+
+Model: AuraVeracity v1.0
+==========================================
+    `.trim();
+    
+    navigator.clipboard.writeText(textSummary);
+    setResultsCopied(true);
+    toast({
+      title: "Results copied!",
+      description: "Analysis summary copied to clipboard.",
+    });
+    setTimeout(() => setResultsCopied(false), 2000);
+  };
+
+  const downloadReportJSON = () => {
     const reportData = {
-      filename: job?.original_filename,
-      verdict: result?.prediction,
-      confidence: result?.confidence_score,
-      timestamp: new Date().toISOString(),
-      visual_confidence: result?.visual_confidence,
-      audio_confidence: result?.audio_confidence,
-      analysis_duration: result?.analysis_duration_seconds,
+      meta: {
+        generator: 'Aura Veracity v1.0',
+        generated_at: new Date().toISOString(),
+        job_id: jobId,
+      },
+      file: {
+        filename: job?.original_filename,
+        upload_timestamp: job?.upload_timestamp,
+      },
+      analysis: {
+        verdict: result?.prediction,
+        confidence_score: result?.confidence_score,
+        visual_confidence: result?.visual_confidence,
+        audio_confidence: result?.audio_confidence,
+        analysis_duration_seconds: result?.analysis_duration_seconds,
+        anomaly_timestamps: result?.anomaly_timestamps,
+        visual_analysis: result?.visual_analysis,
+        audio_analysis: result?.audio_analysis,
+      },
     };
     
     const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `deepfake-analysis-${jobId}.json`;
+    a.download = `aura-veracity-report-${jobId}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
     toast({
-      title: "Report downloaded!",
-      description: "Analysis report has been saved to your device.",
+      title: "JSON Report downloaded!",
+      description: "Full analysis data saved as JSON.",
+    });
+  };
+
+  const downloadReportText = () => {
+    if (!result || !job) return;
+    
+    const confidencePercentage = Math.round(result.confidence_score * 100);
+    const textReport = `
+================================================================================
+                      AURA VERACITY - DEEPFAKE DETECTION REPORT
+================================================================================
+
+ANALYSIS SUMMARY
+--------------------------------------------------------------------------------
+File Name:          ${job.original_filename}
+Analysis Date:      ${new Date(job.upload_timestamp).toLocaleString()}
+Job ID:             ${jobId}
+
+DETECTION RESULTS
+--------------------------------------------------------------------------------
+Verdict:            ${result.prediction}
+Overall Confidence: ${confidencePercentage}%
+
+${result.prediction === 'FAKE' 
+  ? '⚠️  WARNING: This content shows signs of manipulation or synthetic generation.'
+  : '✅  This content appears to be authentic with no signs of manipulation.'}
+
+DETAILED ANALYSIS
+--------------------------------------------------------------------------------
+Visual Stream Confidence:  ${(result.visual_confidence * 100).toFixed(2)}%
+Audio Stream Confidence:   ${(result.audio_confidence * 100).toFixed(2)}%
+Processing Time:           ${result.analysis_duration_seconds.toFixed(2)} seconds
+
+TECHNICAL INFORMATION
+--------------------------------------------------------------------------------
+Model Version:      AuraVeracity v1.0
+Analysis Pipeline:  Multimodal (Visual + Audio)
+Visual Backbone:    ResNet50 with LSTM temporal module
+Audio Analysis:     Mel-Spectrogram CNN
+
+================================================================================
+Generated by Aura Veracity | ${new Date().toISOString()}
+================================================================================
+    `.trim();
+    
+    const blob = new Blob([textReport], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `aura-veracity-report-${jobId}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Text Report downloaded!",
+      description: "Formatted report saved as TXT.",
     });
   };
 
@@ -203,10 +320,56 @@ const Results = () => {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Dashboard
               </Button>
-              <Button variant="outline" size="sm" onClick={downloadReport}>
-                <Download className="w-4 h-4 mr-2" />
-                Report
+              
+              {/* Copy Results Button */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={copyResultsToClipboard}
+                className="transition-smooth"
+              >
+                {resultsCopied ? (
+                  <Check className="w-4 h-4 mr-2 text-success" />
+                ) : (
+                  <Copy className="w-4 h-4 mr-2" />
+                )}
+                {resultsCopied ? 'Copied!' : 'Copy'}
               </Button>
+              
+              {/* Share Link Button */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={copyResultsLink}
+                className="transition-smooth"
+              >
+                {linkCopied ? (
+                  <Check className="w-4 h-4 mr-2 text-success" />
+                ) : (
+                  <Link className="w-4 h-4 mr-2" />
+                )}
+                {linkCopied ? 'Linked!' : 'Share'}
+              </Button>
+              
+              {/* Download Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={downloadReportJSON}>
+                    <FileJson className="w-4 h-4 mr-2" />
+                    Download JSON
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={downloadReportText}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Download TXT
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
