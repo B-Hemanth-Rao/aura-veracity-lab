@@ -14,6 +14,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import Navbar from '@/components/landing/Navbar';
+import { AnalyticsCharts } from '@/components/dashboard/AnalyticsCharts';
 import { 
   FileVideo, 
   Calendar, 
@@ -24,7 +25,8 @@ import {
   Trash2,
   Clock,
   Shield,
-  AlertTriangle
+  AlertTriangle,
+  ArrowLeftRight
 } from 'lucide-react';
 
 interface AnalysisRecord {
@@ -196,7 +198,28 @@ const History = () => {
               </CardContent>
             </Card>
 
-            {/* Results List */}
+            {/* Compare Button */}
+            {analyses.length >= 2 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Button 
+                  onClick={() => navigate('/compare')}
+                  className="w-full"
+                  variant="outline"
+                >
+                  <ArrowLeftRight className="w-4 h-4 mr-2" />
+                  Compare Analyses Side-by-Side
+                </Button>
+              </motion.div>
+            )}
+
+            {/* Analytics Charts */}
+            {analyses.length > 0 && (
+              <AnalyticsCharts analyses={analyses} />
+            )}
             {loading ? (
               <LoadingState message="Loading history..." />
             ) : filteredAnalyses.length === 0 ? (
