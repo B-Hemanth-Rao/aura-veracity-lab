@@ -7,6 +7,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>;
+  signInWithPassword: (email: string, password: string) => Promise<{ error: any }>;
   signInWithOTP: (email: string, metadata?: any) => Promise<{ error: any }>;
   verifyOTP: (email: string, token: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
@@ -64,6 +66,67 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const signUp = async (email: string, password: string, metadata?: any) => {
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: metadata
+        }
+      });
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Sign up failed",
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: "Account created!",
+          description: "Please check your email to confirm your account.",
+        });
+      }
+      
+      return { error };
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Sign up failed",
+        description: error.message,
+      });
+      return { error };
+    }
+  };
+
+  const signInWithPassword = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Sign in failed",
+          description: error.message,
+        });
+      }
+      
+      return { error };
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Sign in failed",
+        description: error.message,
+      });
+      return { error };
+    }
+  };
 
   const signInWithOTP = async (email: string, metadata?: any) => {
     try {
@@ -209,6 +272,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     user,
     session,
     loading,
+    signUp,
+    signInWithPassword,
     signInWithOTP,
     verifyOTP,
     signInWithGoogle,
