@@ -7,8 +7,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithOTP: (email: string, metadata?: any) => Promise<{ error: any }>;
+  verifyOTP: (email: string, token: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   verifyOtp: (email: string, token: string, type: 'email' | 'sms') => Promise<{ error: any }>;
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         
         if (event === 'SIGNED_IN') {
           toast({
-            title: "Welcome back!",
+            title: "Welcome!",
             description: "You have successfully signed in.",
           });
         } else if (event === 'SIGNED_OUT') {
@@ -65,13 +65,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, metadata?: any) => {
+  const signInWithOTP = async (email: string, metadata?: any) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signInWithOtp({
         email,
-        password,
         options: {
-          emailRedirectTo: undefined,
+          emailRedirectTo: `${window.location.origin}/dashboard`,
           data: metadata
         }
       });
@@ -79,7 +78,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) {
         toast({
           variant: "destructive",
-          title: "Sign up failed",
+          title: "Failed to send code",
           description: error.message,
         });
       } else {
@@ -93,24 +92,25 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Sign up failed",
+        title: "Failed to send code",
         description: error.message,
       });
       return { error };
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const verifyOTP = async (email: string, token: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.verifyOtp({
         email,
-        password,
+        token,
+        type: 'email'
       });
       
       if (error) {
         toast({
           variant: "destructive",
-          title: "Sign in failed",
+          title: "Verification failed",
           description: error.message,
         });
       }
@@ -119,7 +119,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Sign in failed",
+        title: "Verification failed",
         description: error.message,
       });
       return { error };
@@ -209,8 +209,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     user,
     session,
     loading,
-    signUp,
-    signIn,
+    signInWithOTP,
+    verifyOTP,
     signInWithGoogle,
     signOut,
     verifyOtp,
