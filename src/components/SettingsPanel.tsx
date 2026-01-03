@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Moon, Sun, Film, Sparkles, User, Lock, Clock, Check, LogIn, Mail, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { X, Moon, Sun, Film, Sparkles, User, Lock, Clock, Check, LogIn, Mail, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useTheme, Theme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
@@ -64,13 +65,13 @@ const mockRecentUploads = [
 
 export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
   const { theme, setTheme } = useTheme();
-  const { user, signIn, signOut } = useAuth();
+  const { user, signInWithOTP, verifyOTP, signOut } = useAuth();
   const navigate = useNavigate();
   
   // Login form state
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -108,29 +109,43 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
     }
   };
 
-  const handleQuickLogin = async (e: React.FormEvent) => {
+  const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!email) {
       toast({
         variant: "destructive",
-        title: "Missing fields",
-        description: "Please enter both email and password.",
+        title: "Missing email",
+        description: "Please enter your email address.",
       });
       return;
     }
 
     setIsLoggingIn(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signInWithOTP(email);
+    setIsLoggingIn(false);
+
+    if (!error) {
+      setOtpSent(true);
+    }
+  };
+
+  const handleVerifyOTP = async () => {
+    if (otp.length !== 6) return;
+
+    setIsLoggingIn(true);
+    const { error } = await verifyOTP(email, otp);
     setIsLoggingIn(false);
 
     if (!error) {
       setEmail('');
-      setPassword('');
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully signed in.",
-      });
+      setOtp('');
+      setOtpSent(false);
     }
+  };
+
+  const handleBackToEmail = () => {
+    setOtpSent(false);
+    setOtp('');
   };
 
   return (
@@ -210,61 +225,88 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                       <LogIn className="w-5 h-5 mr-2" />
                       Sign In
                     </CardTitle>
-                    <CardDescription>Login to access all features</CardDescription>
+                    <CardDescription>
+                      {otpSent ? `Enter the code sent to ${email}` : 'Sign in with your email'}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <form onSubmit={handleQuickLogin} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="login-email">Email</Label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input 
-                            id="login-email" 
-                            type="email" 
-                            placeholder="your@email.com"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="bg-background/50 pl-10" 
-                          />
+                    {!otpSent ? (
+                      <form onSubmit={handleSendOTP} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="login-email">Email</Label>
+                          <div className="relative">
+                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input 
+                              id="login-email" 
+                              type="email" 
+                              placeholder="your@email.com"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              className="bg-background/50 pl-10" 
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="login-password">Password</Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input 
-                            id="login-password" 
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="••••••••"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="bg-background/50 pl-10 pr-10" 
-                          />
+                        <Button type="submit" className="w-full" disabled={isLoggingIn}>
+                          {isLoggingIn ? 'Sending code...' : 'Send verification code'}
+                        </Button>
+                      </form>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex justify-center">
+                          <InputOTP
+                            value={otp}
+                            onChange={setOtp}
+                            maxLength={6}
+                            onComplete={handleVerifyOTP}
+                          >
+                            <InputOTPGroup>
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </div>
+                        <Button 
+                          className="w-full" 
+                          disabled={isLoggingIn || otp.length !== 6}
+                          onClick={handleVerifyOTP}
+                        >
+                          {isLoggingIn ? 'Verifying...' : 'Verify & Sign In'}
+                        </Button>
+                        <div className="flex flex-col items-center gap-2 text-sm">
                           <button
                             type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            onClick={handleSendOTP}
+                            disabled={isLoggingIn}
+                            className="text-primary hover:underline disabled:opacity-50"
                           >
-                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            Resend code
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleBackToEmail}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            Use a different email
                           </button>
                         </div>
                       </div>
-                      <Button type="submit" className="w-full" disabled={isLoggingIn}>
-                        {isLoggingIn ? 'Signing in...' : 'Sign In'}
-                      </Button>
-                    </form>
+                    )}
                     <Separator />
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-2">Don't have an account?</p>
+                      <p className="text-sm text-muted-foreground mb-2">Need a full sign up flow?</p>
                       <Button 
                         variant="outline" 
                         className="w-full"
                         onClick={() => {
                           onClose();
-                          navigate('/auth?mode=signup');
+                          navigate('/auth');
                         }}
                       >
-                        Create Account
+                        Go to Auth Page
                       </Button>
                     </div>
                   </CardContent>
@@ -296,10 +338,6 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
                         />
                       </div>
                       <Separator />
-                      <Button variant="outline" className="w-full">
-                        <Lock className="w-4 h-4 mr-2" />
-                        Change Password
-                      </Button>
                       <Button 
                         variant="destructive" 
                         className="w-full"
