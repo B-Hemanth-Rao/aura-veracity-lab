@@ -11,6 +11,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  verifyOtp: (email: string, token: string, type: 'email' | 'sms') => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -66,13 +67,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signUp = async (email: string, password: string, metadata?: any) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
+          emailRedirectTo: undefined,
           data: metadata
         }
       });
@@ -86,7 +85,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       } else {
         toast({
           title: "Check your email",
-          description: "We've sent you a confirmation link.",
+          description: "We've sent you a one-time password (OTP). Please enter it to verify your account.",
         });
       }
       
@@ -174,6 +173,38 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
+  const verifyOtp = async (email: string, token: string, type: 'email' | 'sms' = 'email') => {
+    try {
+      const { error, data } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type,
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "OTP verification failed",
+          description: error.message,
+        });
+      } else {
+        toast({
+          title: "Email verified",
+          description: "Your email has been successfully verified!",
+        });
+      }
+
+      return { error, data };
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "OTP verification failed",
+        description: error.message,
+      });
+      return { error };
+    }
+  };
+
   const value = {
     user,
     session,
@@ -182,6 +213,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     signIn,
     signInWithGoogle,
     signOut,
+    verifyOtp,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -77,7 +77,18 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
-      const { data, error } = await supabase.functions.invoke('delete-account');
+      // Get the current session to pass authorization
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        throw new Error('No active session. Please sign in again.');
+      }
+
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
       
       if (error) {
         console.error('Delete account error:', error);
@@ -90,13 +101,16 @@ export const SettingsPanel = ({ isOpen, onClose }: SettingsPanelProps) => {
         return;
       }
 
+      // Sign out the user before redirecting
+      await signOut();
+
       toast({
         title: "Account deleted",
         description: "Your account and all associated data have been permanently removed.",
       });
       
       onClose();
-      navigate('/');
+      setTimeout(() => navigate('/'), 1000);
     } catch (error: any) {
       console.error('Delete account error:', error);
       toast({
