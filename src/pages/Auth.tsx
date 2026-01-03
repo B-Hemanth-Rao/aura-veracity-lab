@@ -5,11 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingState } from '@/components/ui/loading-state';
-import { Eye, EyeOff, Shield, Zap, Brain, ArrowLeft } from 'lucide-react';
+import { Shield, Zap, Brain, ArrowLeft, Mail, CheckCircle } from 'lucide-react';
 
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -33,13 +33,15 @@ const GoogleIcon = () => (
 );
 
 const Auth = () => {
-  const { user, signIn, signUp, signInWithGoogle, loading } = useAuth();
+  const { user, signInWithOTP, verifyOTP, signInWithGoogle, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>('signin');
+  const [email, setEmail] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [fullName, setFullName] = useState('');
 
   // Generate particles only once
   const particles = useMemo(() => 
@@ -54,13 +56,6 @@ const Auth = () => {
     })), 
   []);
 
-  useEffect(() => {
-    const mode = searchParams.get('mode');
-    if (mode === 'signup' || mode === 'signin') {
-      setActiveTab(mode);
-    }
-  }, [searchParams]);
-
   if (user) {
     return <Navigate to="/dashboard" replace />;
   }
@@ -68,32 +63,38 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     await signInWithGoogle();
-    // Note: Don't set loading to false here as the page will redirect
   };
 
-  const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSendOTP = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!email) return;
+    
     setIsSubmitting(true);
+    const { error } = await signInWithOTP(email, { full_name: fullName });
     
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    
-    await signIn(email, password);
+    if (!error) {
+      setOtpSent(true);
+    }
     setIsSubmitting(false);
   };
 
-  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleVerifyOTP = async () => {
+    if (otp.length !== 6) return;
+    
     setIsSubmitting(true);
-    
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-    const fullName = formData.get('fullName') as string;
-    
-    await signUp(email, password, { full_name: fullName });
+    await verifyOTP(email, otp);
     setIsSubmitting(false);
+  };
+
+  const handleResendOTP = async () => {
+    setIsSubmitting(true);
+    await signInWithOTP(email, { full_name: fullName });
+    setIsSubmitting(false);
+  };
+
+  const handleBackToEmail = () => {
+    setOtpSent(false);
+    setOtp('');
   };
 
   if (loading) {
@@ -179,19 +180,19 @@ const Auth = () => {
         {/* Auth card */}
         <Card className="glass-strong border-border/50">
           <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl font-bold text-center">Welcome</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center">
+              {otpSent ? 'Enter verification code' : 'Welcome'}
+            </CardTitle>
             <CardDescription className="text-center">
-              Sign in to your account or create a new one
+              {otpSent 
+                ? `We sent a 6-digit code to ${email}` 
+                : 'Sign in or create an account with your email'
+              }
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="signin" className="mt-0 space-y-4">
+          <CardContent className="space-y-4">
+            {!otpSent ? (
+              <>
                 {/* Google Sign In Button */}
                 <Button
                   type="button"
@@ -213,136 +214,100 @@ const Auth = () => {
                   </div>
                 </div>
 
-                <form onSubmit={handleSignIn} className="space-y-4">
+                <form onSubmit={handleSendOTP} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="fullName">Full Name</Label>
                     <Input
-                      id="signin-email"
-                      name="email"
-                      type="email"
-                      placeholder="you@example.com"
-                      required
-                      autoComplete="email"
-                      className="bg-background/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="signin-password"
-                        name="password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        required
-                        autoComplete="current-password"
-                        className="bg-background/50 pr-10"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Signing in...' : 'Sign In'}
-                  </Button>
-                </form>
-              </TabsContent>
-              
-              <TabsContent value="signup" className="mt-0 space-y-4">
-                {/* Google Sign Up Button */}
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full gap-3 h-11"
-                  onClick={handleGoogleSignIn}
-                  disabled={isGoogleLoading}
-                >
-                  <GoogleIcon />
-                  {isGoogleLoading ? 'Connecting...' : 'Continue with Google'}
-                </Button>
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <Separator className="w-full" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">or</span>
-                  </div>
-                </div>
-
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
-                    <Input
-                      id="signup-name"
-                      name="fullName"
+                      id="fullName"
                       type="text"
                       placeholder="John Doe"
-                      required
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
                       autoComplete="name"
                       className="bg-background/50"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="email">Email</Label>
                     <Input
-                      id="signup-email"
-                      name="email"
+                      id="email"
                       type="email"
                       placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                       autoComplete="email"
                       className="bg-background/50"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Password</Label>
-                    <div className="relative">
-                      <Input
-                        id="signup-password"
-                        name="password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Create a strong password"
-                        required
-                        minLength={6}
-                        autoComplete="new-password"
-                        className="bg-background/50 pr-10"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <Eye className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </Button>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Must be at least 6 characters
-                    </p>
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? 'Creating account...' : 'Create Account'}
+                  <Button type="submit" className="w-full gap-2" disabled={isSubmitting || !email}>
+                    <Mail className="w-4 h-4" />
+                    {isSubmitting ? 'Sending code...' : 'Send verification code'}
                   </Button>
                 </form>
-              </TabsContent>
-            </Tabs>
+              </>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                <div className="flex justify-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 200 }}
+                    className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center"
+                  >
+                    <CheckCircle className="w-8 h-8 text-primary" />
+                  </motion.div>
+                </div>
+
+                <div className="flex justify-center">
+                  <InputOTP
+                    value={otp}
+                    onChange={setOtp}
+                    maxLength={6}
+                    onComplete={handleVerifyOTP}
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+
+                <Button 
+                  className="w-full" 
+                  disabled={isSubmitting || otp.length !== 6}
+                  onClick={handleVerifyOTP}
+                >
+                  {isSubmitting ? 'Verifying...' : 'Verify & Sign In'}
+                </Button>
+
+                <div className="flex flex-col items-center gap-2 text-sm">
+                  <button
+                    type="button"
+                    onClick={handleResendOTP}
+                    disabled={isSubmitting}
+                    className="text-primary hover:underline disabled:opacity-50"
+                  >
+                    Resend code
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBackToEmail}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    Use a different email
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </CardContent>
         </Card>
 
