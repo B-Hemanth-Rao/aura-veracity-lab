@@ -4,33 +4,33 @@ import { Shield, Zap, Eye, Brain, Lock, BarChart3 } from 'lucide-react';
 const features = [
   {
     icon: Shield,
-    title: 'Deepfake Detection',
-    description: 'Advanced AI models trained to detect manipulated media with 99.2% accuracy, protecting against misinformation.',
+    title: 'AI-Powered Detection',
+    description: 'Advanced machine learning models trained on diverse datasets to identify manipulated and synthetic media.',
   },
   {
     icon: Brain,
     title: 'Multimodal Analysis',
-    description: 'Combines visual and audio analysis for comprehensive detection of synthetic content.',
+    description: 'Combines visual and audio analysis for comprehensive detection of AI-generated content.',
   },
   {
     icon: Zap,
-    title: 'Real-time Processing',
-    description: 'Get results within seconds. Our optimized pipeline processes videos faster than ever.',
+    title: 'Fast Processing',
+    description: 'Optimized processing pipeline delivers analysis results quickly and efficiently.',
   },
   {
     icon: Eye,
-    title: 'Frame-level Detection',
-    description: 'Pinpoint exact moments of manipulation with frame-by-frame analysis and heatmaps.',
+    title: 'Frame-level Analysis',
+    description: 'Detailed frame-by-frame examination to identify potential manipulation artifacts.',
   },
   {
     icon: Lock,
-    title: 'Data Privacy',
-    description: 'Your uploads are encrypted and automatically deleted after analysis. Compliant with Indian IT Act 2000.',
+    title: 'Privacy First',
+    description: 'Your uploads are encrypted and handled securely. We prioritize your data privacy.',
   },
   {
     icon: BarChart3,
     title: 'Detailed Reports',
-    description: 'Export comprehensive analysis reports for legal documentation and evidence preservation.',
+    description: 'Export comprehensive analysis reports suitable for documentation and review.',
   },
 ];
 

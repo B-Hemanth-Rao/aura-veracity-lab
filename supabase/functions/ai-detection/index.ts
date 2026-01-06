@@ -137,31 +137,13 @@ Deno.serve(async (req) => {
       }
     )
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error in AI detection:', error)
     
-    // If we have a jobId, mark the job as failed
-    if (error.jobId) {
-      try {
-        const supabaseClient = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-        )
-        
-        await supabaseClient
-          .from('detection_jobs')
-          .update({
-            status: 'failed',
-            analysis_end_time: new Date().toISOString()
-          })
-          .eq('id', error.jobId)
-      } catch (updateError) {
-        console.error('Failed to update job status:', updateError)
-      }
-    }
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
 
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: errorMessage }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

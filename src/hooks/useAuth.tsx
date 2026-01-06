@@ -236,12 +236,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const verifyOtp = async (email: string, token: string, type: 'email' | 'sms' = 'email') => {
+  const verifyOtp = async (email: string, token: string) => {
     try {
       const { error, data } = await supabase.auth.verifyOtp({
         email,
         token,
-        type,
+        type: 'email' as const,
       });
 
       if (error) {
