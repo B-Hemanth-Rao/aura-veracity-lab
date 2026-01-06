@@ -7,55 +7,46 @@ const plans = [
   {
     name: 'Free',
     icon: Zap,
-    price: '₹0',
-    period: '/month',
     description: 'Perfect for individuals exploring deepfake detection.',
     features: [
-      '5 video analyses per month',
+      'Limited video analyses',
       'Basic confidence scores',
-      'Max 50MB file size',
-      'Email support',
-      'Standard processing speed',
+      'Standard file size limit',
+      'Community support',
     ],
-    cta: 'Get Started Free',
+    cta: 'Get Started',
     popular: false,
   },
   {
     name: 'Professional',
     icon: Crown,
-    price: '₹999',
-    period: '/month',
     description: 'For journalists, fact-checkers, and content creators.',
     features: [
-      '100 video analyses per month',
+      'Increased analysis quota',
       'Detailed analysis reports',
-      'Max 500MB file size',
+      'Larger file size support',
       'Priority processing',
-      'Frame-level heatmaps',
-      'API access (1000 calls)',
-      'Priority email & chat support',
+      'Frame-level analysis',
+      'Email support',
     ],
-    cta: 'Start Professional',
+    cta: 'Coming Soon',
     popular: true,
+    comingSoon: true,
   },
   {
     name: 'Enterprise',
     icon: Building2,
-    price: 'Custom',
-    period: '',
-    description: 'For organizations, media houses, and government agencies.',
+    description: 'For organizations, media houses, and institutions.',
     features: [
       'Unlimited video analyses',
-      'Custom model training',
-      'Unlimited file size',
+      'Custom integrations',
       'Dedicated infrastructure',
-      'White-label solution',
-      'Full API access',
-      'On-premise deployment option',
-      '24/7 dedicated support',
+      'API access',
+      'White-label options',
+      'Dedicated support',
       'SLA guarantee',
     ],
-    cta: 'Contact Sales',
+    cta: 'Contact Us',
     popular: false,
   },
 ];
@@ -76,10 +67,10 @@ const Pricing = () => {
           transition={{ duration: 0.5 }}
         >
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Simple, Transparent <span className="text-gradient">Pricing</span>
+            Flexible <span className="text-gradient">Plans</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Choose the plan that fits your needs. All prices in Indian Rupees (₹). GST applicable.
+            Choose the plan that fits your needs. Pricing details coming soon.
           </p>
         </motion.div>
 
@@ -111,11 +102,6 @@ const Pricing = () => {
                 <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
               </div>
               
-              <div className="mb-4">
-                <span className="text-4xl font-bold text-foreground">{plan.price}</span>
-                <span className="text-muted-foreground">{plan.period}</span>
-              </div>
-              
               <p className="text-muted-foreground text-sm mb-6">{plan.description}</p>
               
               <ul className="space-y-3 mb-8">
@@ -130,7 +116,8 @@ const Pricing = () => {
               <Button
                 className="w-full"
                 variant={plan.popular ? 'default' : 'outline'}
-                onClick={() => navigate('/auth?mode=signup')}
+                onClick={() => !plan.comingSoon && navigate('/auth?mode=signup')}
+                disabled={plan.comingSoon}
               >
                 {plan.cta}
               </Button>
@@ -138,7 +125,6 @@ const Pricing = () => {
           ))}
         </div>
 
-        {/* India-specific note */}
         <motion.p
           className="text-center text-muted-foreground text-sm mt-8"
           initial={{ opacity: 0 }}
@@ -146,9 +132,7 @@ const Pricing = () => {
           viewport={{ once: true }}
           transition={{ delay: 0.5 }}
         >
-          Special discounts available for Indian government agencies, educational institutions, and registered NGOs.
-          <br />
-          Contact us at <span className="text-primary">enterprise@auraveracity.in</span>
+          Have questions? Reach out to us at <span className="text-primary">contact@auraveracity.in</span>
         </motion.p>
       </div>
     </section>

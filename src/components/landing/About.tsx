@@ -1,12 +1,6 @@
 import { motion } from 'framer-motion';
-import { Shield, Users, Award, MapPin } from 'lucide-react';
+import { Shield, Users, Award } from 'lucide-react';
 
-const stats = [
-  { label: 'Videos Analyzed', value: '2.5M+' },
-  { label: 'Accuracy Rate', value: '99.2%' },
-  { label: 'Users Protected', value: '50K+' },
-  { label: 'Indian States Covered', value: '28' },
-];
 
 const About = () => {
   return (
@@ -82,45 +76,34 @@ const About = () => {
             </div>
           </motion.div>
 
-          {/* Right - Stats and location */}
+          {/* Right - Vision card */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            {/* Stats grid */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  className="glass-strong p-6 rounded-2xl border border-border/30 text-center"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <div className="text-3xl font-bold text-primary mb-1">{stat.value}</div>
-                  <div className="text-sm text-muted-foreground">{stat.label}</div>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Location card */}
-            <div className="glass-strong p-6 rounded-2xl border border-border/30">
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className="w-5 h-5 text-primary" />
-                <h4 className="font-semibold text-foreground">Our Presence</h4>
-              </div>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <p><strong className="text-foreground">Headquarters:</strong> Bengaluru, Karnataka</p>
-                <p><strong className="text-foreground">R&D Center:</strong> Hyderabad, Telangana</p>
-                <p><strong className="text-foreground">Regional Offices:</strong> Mumbai, Delhi NCR, Chennai</p>
-              </div>
-              <div className="mt-4 pt-4 border-t border-border/30">
-                <p className="text-xs text-muted-foreground">
-                  Registered under the Startup India initiative. CIN: U72900KA2024PTC123456
-                </p>
+            {/* Vision card */}
+            <div className="glass-strong p-8 rounded-2xl border border-border/30">
+              <h3 className="text-2xl font-bold text-foreground mb-4">Our Vision</h3>
+              <p className="text-muted-foreground mb-6">
+                To create a safer digital ecosystem where individuals and organizations can trust 
+                the authenticity of media content. We believe in empowering users with cutting-edge 
+                AI technology to combat misinformation.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <span className="text-foreground">Continuous model improvement</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <span className="text-foreground">Research-driven development</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  <span className="text-foreground">User privacy at the core</span>
+                </div>
               </div>
             </div>
           </motion.div>
