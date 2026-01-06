@@ -34,8 +34,8 @@ const Hero = () => {
     },
     {
       icon: Zap,
-      title: 'Instant Results',
-      description: 'Get detailed authenticity reports in seconds, not minutes'
+      title: 'Quick Processing',
+      description: 'Upload your video and receive analysis results efficiently'
     }
   ];
 
@@ -111,8 +111,8 @@ const Hero = () => {
             transition={{ delay: 0.4 }}
             className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
           >
-            Aura Veracity uses cutting-edge multimodal AI to detect deepfakes with unprecedented accuracy. 
-            Upload any video and get instant, reliable authenticity analysis.
+            Aura Veracity uses multimodal AI to analyze videos for potential deepfake manipulation. 
+            Upload a video and get detailed authenticity analysis.
           </motion.p>
         </motion.div>
 
