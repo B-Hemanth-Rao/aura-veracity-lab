@@ -29,8 +29,8 @@ const Hero = () => {
     },
     {
       icon: Shield,
-      title: '99.7% Accuracy',
-      description: 'State-of-the-art neural networks trained on millions of samples'
+      title: 'Advanced Detection',
+      description: 'Deep learning models trained to identify synthetic media artifacts'
     },
     {
       icon: Zap,
