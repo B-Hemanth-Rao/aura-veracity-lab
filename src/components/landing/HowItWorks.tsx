@@ -6,25 +6,25 @@ const steps = [
     icon: Upload,
     step: '01',
     title: 'Upload Your Video',
-    description: 'Drag and drop or select any video file. We support MP4, AVI, MOV, and WebM formats up to 500MB.',
+    description: 'Drag and drop or select a video file. We support common video formats.',
   },
   {
     icon: Cpu,
     step: '02',
     title: 'AI Analysis',
-    description: 'Our multimodal AI analyzes visual frames and audio patterns using state-of-the-art detection models.',
+    description: 'Our multimodal AI analyzes visual frames and audio patterns to detect potential manipulation.',
   },
   {
     icon: FileCheck,
     step: '03',
     title: 'View Results',
-    description: 'Get detailed confidence scores, anomaly timestamps, and frame-level analysis in seconds.',
+    description: 'Review confidence scores, detected anomalies, and detailed analysis breakdown.',
   },
   {
     icon: Download,
     step: '04',
     title: 'Export Report',
-    description: 'Download comprehensive PDF/JSON reports suitable for legal documentation and evidence.',
+    description: 'Download analysis reports for your records and further review.',
   },
 ];
 
@@ -76,23 +76,6 @@ const HowItWorks = () => {
           ))}
         </div>
 
-        {/* India-specific info */}
-        <motion.div
-          className="mt-16 glass-strong p-8 rounded-2xl border border-border/30 text-center"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
-          <h3 className="text-xl font-semibold text-foreground mb-3">
-            Designed for India's Digital Landscape
-          </h3>
-          <p className="text-muted-foreground max-w-3xl mx-auto">
-            With over 800 million internet users, India faces unique challenges in combating misinformation. 
-            Aura Veracity is built to handle regional language content, Bollywood-style media, and the 
-            specific deepfake patterns prevalent in the Indian digital ecosystem.
-          </p>
-        </motion.div>
       </div>
     </section>
   );
