@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Shield, Menu, X, Settings, LogOut, User } from 'lucide-react';
+import { Shield, Menu, X, Settings, LogOut, User, History } from 'lucide-react';
 import { SettingsPanel } from '@/components/SettingsPanel';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +24,8 @@ const Navbar = () => {
   const { user, loading, signOut } = useAuth();
   
   const isHomePage = location.pathname === '/';
+  const isDashboard = location.pathname === '/dashboard';
+  const isHistory = location.pathname === '/history';
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -138,12 +140,31 @@ const Navbar = () => {
                     <User className="w-4 h-4" />
                     <span>{displayName}</span>
                   </div>
-                  <Button 
-                    variant="outline"
-                    onClick={() => navigate('/dashboard')}
-                  >
-                    Dashboard
-                  </Button>
+                  {(isDashboard || isHistory) && (
+                    <Button 
+                      variant="ghost"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => navigate(isDashboard ? '/history' : '/dashboard')}
+                    >
+                      {isDashboard ? (
+                        <>
+                          <History className="w-4 h-4" />
+                          <span className="hidden sm:inline">History</span>
+                        </>
+                      ) : (
+                        <>Dashboard</>
+                      )}
+                    </Button>
+                  )}
+                  {!isDashboard && !isHistory && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate('/dashboard')}
+                    >
+                      Dashboard
+                    </Button>
+                  )}
                   <Button 
                     variant="ghost"
                     size="icon"
@@ -226,16 +247,37 @@ const Navbar = () => {
                           <User className="w-4 h-4" />
                           <span>{displayName}</span>
                         </div>
-                        <Button 
-                          variant="default"
-                          className="justify-start"
-                          onClick={() => {
-                            navigate('/dashboard');
-                            setIsOpen(false);
-                          }}
-                        >
-                          Dashboard
-                        </Button>
+                        {(isDashboard || isHistory) && (
+                          <Button 
+                            variant="ghost"
+                            className="justify-start gap-2"
+                            onClick={() => {
+                              navigate(isDashboard ? '/history' : '/dashboard');
+                              setIsOpen(false);
+                            }}
+                          >
+                            {isDashboard ? (
+                              <>
+                                <History className="w-4 h-4" />
+                                History
+                              </>
+                            ) : (
+                              <>Dashboard</>
+                            )}
+                          </Button>
+                        )}
+                        {!isDashboard && !isHistory && (
+                          <Button 
+                            variant="default"
+                            className="justify-start"
+                            onClick={() => {
+                              navigate('/dashboard');
+                              setIsOpen(false);
+                            }}
+                          >
+                            Dashboard
+                          </Button>
+                        )}
                         <Button 
                           variant="ghost"
                           className="justify-start text-destructive hover:text-destructive hover:bg-destructive/10"

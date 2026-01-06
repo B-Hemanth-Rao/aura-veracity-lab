@@ -192,22 +192,6 @@ const Dashboard = () => {
 
       <Navbar />
       <div className="min-h-screen pt-20 bg-gradient-to-br from-background via-background to-primary/5">
-        <PageHeader
-          subtitle="Dashboard"
-          onSettingsClick={() => setSettingsOpen(true)}
-          actions={
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="gap-2"
-              onClick={() => navigate('/history')}
-            >
-              <History className="w-4 h-4" />
-              <span className="hidden sm:inline">History</span>
-            </Button>
-          }
-        />
-
         <PageContainer maxWidth="2xl">
           {!currentJob ? (
             <VideoUploader 

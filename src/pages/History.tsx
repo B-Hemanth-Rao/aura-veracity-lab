@@ -12,7 +12,6 @@ import { toast } from '@/hooks/use-toast';
 import { PageHeader } from '@/components/ui/page-header';
 import { LoadingState } from '@/components/ui/loading-state';
 import { EmptyState } from '@/components/ui/empty-state';
-import { SettingsPanel } from '@/components/SettingsPanel';
 import Navbar from '@/components/landing/Navbar';
 import { AnalyticsCharts } from '@/components/dashboard/AnalyticsCharts';
 import { 
@@ -48,7 +47,6 @@ const History = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [filterStatus, setFilterStatus] = useState<'all' | 'real' | 'fake'>('all');
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     const fetchAnalyses = async () => {
@@ -142,15 +140,9 @@ const History = () => {
 
   return (
     <>
-      <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <Navbar />
       
       <div className="min-h-screen pt-20 bg-gradient-to-br from-background via-background to-primary/5 transition-smooth">
-        <PageHeader
-          title="Analysis History"
-          onSettingsClick={() => setSettingsOpen(true)}
-        />
-
         <main className="container mx-auto px-4 py-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
